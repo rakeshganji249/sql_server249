@@ -1,0 +1,157 @@
+--1.Write a script to extracts all the numerics from Alphanumeric String
+Answer:
+Alter function FNUMS(@STR VARCHAR(50))
+RETURNS VARCHAR(50)
+AS
+	BEGIN
+			DECLARE @NUMS VARCHAR(50)=''
+			DECLARE @INDEX INT =1
+			DECLARE @STRLEN INT =LEN(@STR)
+			WHILE @INDEX <= @STRLEN
+				BEGIN
+					DECLARE @CHAR CHAR(1)= SUBSTRING(@STR,@INDEX,1)
+					IF @CHAR BETWEEN '0' AND '9'
+						BEGIN
+							SET @NUMS+=@CHAR
+						END
+					SET @INDEX+=1
+				END
+				RETURN @NUMS
+	END
+
+	select dbo.FNUMS('1were3234t')
+
+DECLARE @ISTR VARCHAR(MAX)='13RETRGFER31324ERRGF'
+SELECT DBO.FNUMS(@ISTR) AS FNUMS
+
+
+--2.Write a script to calculate age based on the Input DOB
+Anwer:
+
+DECLARE @DATE DATE ='2001-05-19'
+SELECT DATEDIFF(YEAR,@DATE,GETDATE()) AS AGE
+
+
+
+
+/*
+3. Create a column in a table and that should throw an error when we do SELECT * 
+or SELECT of that column. If we select other columns then we should see results
+*/
+Answer:
+
+CREATE TABLE ExmTb (
+  ID INT,
+  Name VARCHAR(50),
+  RestrictedColumn AS 1/0
+);
+
+
+INSERT INTO ExmTb (ID, Name)
+VALUES (1, 'John'), (2, 'Jane');
+
+SELECT * FROM ExmTb;
+SELECT Name FROM ExmTb
+/*
+4.Display Calendar Table based on the input year. If I give the year 2017 then populate data for 2017 only
+
+Date e.g.  1/1/2017 
+
+DayofYear 1 – 365/366 (Note 1)
+
+Week 1-52/53
+
+DayofWeek 1-7
+
+Month 1-12
+
+DayofMonth 1-30/31 (Note 2)
+
+Note 1: DayofYear varies depending on the number of days in the given year.
+
+Note 2: DayofMonth varies depending on number of days in the given month
+
+Weekly calculations are always for a 7 day period Sunday to Saturday.
+*/
+Answer:
+
+DECLARE @Year INT = 2017;
+DECLARE @StartDate DATE = CAST(@Year AS VARCHAR) + '-01-01';
+DECLARE @EndDate DATE = CAST(@Year AS VARCHAR) + '-12-31';
+
+CREATE TABLE CalendarTable (
+    Date DATE,
+    DayOfYear INT,
+    Week INT,
+    DayOfWeek INT,
+    Month INT,
+    DayOfMonth INT
+);
+
+WHILE @StartDate <= @EndDate
+BEGIN
+    INSERT INTO CalendarTable (Date, DayOfYear, Week, DayOfWeek, Month, DayOfMonth)
+    VALUES (
+        @StartDate,
+        DATEPART(DAYOFYEAR, @StartDate),
+        DATEPART(WEEK, @StartDate),
+        DATEPART(WEEKDAY, @StartDate) + 1,
+        DATEPART(MONTH, @StartDate),
+        DATEPART(DAY, @StartDate)
+    );
+
+    SET @StartDate = DATEADD(DAY, 1, @StartDate);
+END
+
+SELECT * FROM CalendarTable;
+
+
+
+/*
+5.Display Emp and Manager Hierarchies based on the input till the topmost hierarchy.
+ (Input would be empid)
+
+Output: Empid, empname, managername, heirarchylevel
+*/
+Answer:
+
+CREATE TABLE employees (
+    EmployeeID INT,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    ManagerID INT
+);
+
+INSERT INTO employees (EmployeeID, FirstName, LastName, ManagerID)
+VALUES
+    (1, 'John', 'Doe', NULL),
+    (2, 'Jane', 'Smith', 1),    
+    (3, 'Michael', 'Johnson', 2),    
+    (4, 'Emily', 'Davis', 2),   
+    (5, 'David', 'Brown', 1),   
+    (6, 'Sarah', 'Wilson', 5);   
+
+
+WITH cte(EmpID, FirstName, LastName, MgrID, EmpLevel)  
+AS  
+(  
+  SELECT EmployeeID, FirstName, LastName, ManagerID, 1  
+  FROM employees 
+  WHERE ManagerID IS NULL  
+
+  UNION ALL  
+
+  SELECT emp.EmployeeID, emp.FirstName, emp.LastName, emp.ManagerID, r.EmpLevel + 1  
+  FROM employees emp 
+  INNER JOIN cte r ON emp.ManagerID = r.EmpID  
+)  
+SELECT  
+  EmpID AS Empid, FirstName AS empname,  
+  (SELECT FirstName FROM employees   
+    WHERE EmployeeID = cte.MgrID) AS managername  , EmpLevel AS hierarchylevel
+FROM cte 
+ORDER BY EmpLevel,MgrID
+
+
+select * from employees
+

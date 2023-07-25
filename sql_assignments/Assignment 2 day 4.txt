@@ -1,0 +1,221 @@
+
+/*
+1. Select all departments in all locations where the Total Salary of a Department is Greater than twice
+ the Average Salary for the department.And max basic for the department is at least thrice the Min basic
+ for the department*/
+
+Answer:
+SELECT d.department_id, d.department_name, d.location
+FROM departments1 d
+inner JOIN employeess e ON d.department_id = e.department_id
+GROUP BY d.department_id, d.department_name, d.location
+HAVING SUM(e.salary) > 2 * AVG(e.salary)
+   AND MAX(e.basic) >= 3 * MIN(e.basic);
+
+
+/*	
+2. As per the companies rule if an employee has put up service of 1 Year 3 Months and 
+15 days in office, Then She/he would be eligible for a Bonus.the Bonus would be Paid 
+on the first of the Next month after which a person has attained eligibility. Find out the 
+eligibility date for all the employees. And also find out the age of the Employee On the 
+date of Payment of the First bonus. Display the Age in Years, Months, and Days. Also 
+Display the weekday Name, week of the year, Day of the year and week of the month 
+of the date on which the person has attained the eligibility*/
+
+Answer:
+insert into employ_bonus values(1,'Rakesh','2023-05-24','2001-05-19'),
+		               (2,'Ramu','2023-05-24','2001-05-25'),
+			(3,'sujith','2023-05-14','2002-05-02'),
+			(4,'supraja','2023-05-14','2001-03-04'),
+			(5,'teju','2023-05-14','2001-08-14'),
+			(6,'virat','2021-08-12','1993-06-25'),
+			(7,'mahendra','2020-05-19','1986-07-15')
+select * from employ_bonus
+
+OPTION 1:
+
+SELECT
+  joining_date,
+  DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date))) AS eligibility_date,
+  dateadd(day,1,eomonth(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))AS First_Day_of_Next_month,
+  datediff(year,date_of_birth,(dateadd(day,1,eomonth(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))))AS age_in_years,
+  datediff(month,date_of_birth,(dateadd(day,1,eomonth(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))))AS age_in_months,
+  datediff(day,date_of_birth,(dateadd(day,1,eomonth(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))))AS age_in_days,
+  datename(weekday,(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))AS weekday_name,
+  datepart(WEEK,(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))AS week_of_year,
+  datepart(DAYOFYEAR,(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))AS day_of_year,
+  DATEPART(WEEK, (DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date))))) -
+  DATEPART(WEEK, DATEADD(DAY, 1 - DATEPART(DAY, (DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date))))), (DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))) + 1 AS week_of_month
+
+FROM employ_bonus;
+
+
+OPTION 2:
+
+SELECT
+  eb.employee_id,eb.employee_name,
+  eb.joining_date,ed.eligibility_date,
+  datediff(year,date_of_birth,ed.First_Day_of_Next_month)AS age_in_years,
+  datediff(month,date_of_birth,ed.First_Day_of_Next_month)AS age_in_months,
+  datediff(day,date_of_birth,ed.First_Day_of_Next_month)AS age_in_days,
+  datename(weekday,ed.eligibility_date)AS weekday_name,  
+  datepart(WEEK,ed.eligibility_date)AS week_of_year,
+  datepart(DAYOFYEAR,ed.eligibility_date)AS day_of_year,
+  DATEPART(WEEK, ed.eligibility_date) - DATEPART(WEEK, DATEADD(DAY, 1 - DATEPART(DAY, ed.eligibility_date), (ed.eligibility_date))) + 1 AS week_of_month
+    
+from employ_bonus eb
+inner Join(select   employee_id,DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date))) AS eligibility_date,
+			dateadd(day,1,eomonth(DATEADD(DAY, 15, DATEADD(MONTH, 3, DATEADD(YEAR, 1, joining_date)))))AS First_Day_of_Next_month
+	  from employ_bonus
+	) ed on eb.employee_id=ed.employee_id;
+
+
+
+
+/*3. Company Has decided to Pay a bonus to all its employees. The criteria is as follows 
+1. Service Type 1. Employee Type 1. 
+Minimum service is 10.
+Minimum service left should be 15 Years. 
+Retirement age will be 60 Years 
+
+2. Service Type 1. Employee Type 2.
+Minimum service is 12. 
+Minimum service left should be 14 Years . 
+Retirement age will be 55 Years 
+
+3. Service Type 1. Employee Type 3. 
+Minimum service is 12. 
+Minimum service left should be 12 Years . 
+Retirement age will be 55 Years 
+
+3. for Service Type 2,3,4 
+Minimum Service should Be 15 and Minimum service left should be 20 Years . 
+Retirement age will be 65 Years
+
+Write a query to find out the employees who are eligible for the bonus. */
+
+Answer:
+
+CREATE TABLE Employees2 (
+  EmployeeID INT PRIMARY KEY,
+  EmployeeName VARCHAR(100),
+  ServiceType INT,
+  EmployeeType INT,
+  JoiningDate DATE,
+  RetirementAge INT,
+  Birthdate DATE
+);
+
+INSERT INTO Employees2 (EmployeeID, EmployeeName, ServiceType, EmployeeType, JoiningDate, RetirementAge, Birthdate)
+VALUES
+  (1, 'John Doe', 1, 1, '2010-01-01', 60, '1980-05-15'),
+  (2, 'Jane Smith', 1, 2, '2008-06-01', 55, '1982-09-30'),
+  (3, 'Michael Johnson', 1, 3, '2009-03-15', 55, '1975-11-10'),
+  (4, 'Emily Brown', 2, 1, '2007-02-01', 65, '1972-07-20'),
+  (5, 'David Wilson', 3, 1, '2012-11-15', 65, '1988-03-05');
+
+  select *
+  from employees2
+  where
+ ( (ServiceType=1 and EmployeeType=1 and (datediff(year,joiningdate,getdate())>=10) and (datediff(year,getdate(),(dateadd(year,60,birthdate)))>=15))
+  or (ServiceType=1 and EmployeeType=2 and (datediff(year,joiningdate,getdate())>=12) and (datediff(year,getdate(),(dateadd(year,55,birthdate)))>=14))
+  or  (ServiceType=1 and EmployeeType=3 and (datediff(year,joiningdate,getdate())>=12) and (datediff(year,getdate(),(dateadd(year,55,birthdate)))>=12))
+  or  (ServiceType in (2,3,4) and (datediff(year,joiningdate,getdate())>=15) and (datediff(year,getdate(),(dateadd(year,65,birthdate)))>=20))
+ )
+
+
+ /*4.write a query to Get Max, Min and Average age of employees, service period of employees by service Type , 
+ Service Status for each Centre(display in years and Months) */
+
+ Answer:
+OPTION 1:
+
+CREATE TABLE Employee4 (
+  EmployeeID INT PRIMARY KEY,
+  EmployeeName VARCHAR(100),
+  ServiceType INT,
+  Employeeservice VARCHAR(100),
+  Srvice_status VARCHAR(100),
+  Birthdate DATE,
+  JOININGDATE DATE
+);
+
+SELECT * FROM EMPLOYEE4
+
+SELECT EmployeeID,EMPLOYEENAME,
+	   Birthdate,DATEDIFF(YEAR,Birthdate,GETDATE())AS AGE,
+	   MAX(DATEDIFF(YEAR,Birthdate,GETDATE())) OVER (PARTITION BY SERVICETYPE )AS MAX_AGE_YR,
+	   MAX(DATEDIFF(MONTH,Birthdate,GETDATE())) OVER (PARTITION BY SERVICETYPE )AS MAX_AGE_MN,
+	   MIN(DATEDIFF(YEAR,Birthdate,GETDATE())) OVER (PARTITION BY SERVICETYPE )AS MIN_AGE_YR,
+	   MIN(DATEDIFF(MONTH,Birthdate,GETDATE())) OVER (PARTITION BY SERVICETYPE )AS MIN_AGE_MN,
+	   AVG(DATEDIFF(YEAR,Birthdate,GETDATE())) OVER (PARTITION BY SERVICETYPE )AS AVG_AGE_YR,
+	   AVG(DATEDIFF(MONTH,Birthdate,GETDATE())) OVER (PARTITION BY SERVICETYPE )AS AVG_AGE_MN,
+	   DATEDIFF(YEAR,JOININGDATE,GETDATE()) AS S_YEARS,
+	   DATEDIFF(MONTH,JOININGDATE,GETDATE()) AS S_MONTHS,
+	   DATEDIFF(DAY,JOININGDATE,GETDATE())AS S_DAYS,
+	   ServiceType,Employeeservice,Srvice_status
+FROM EMPLOYEE4
+
+OPTION 2:
+
+SELECT e.EmployeeId,e.EmployeeName AS EmpName,e.Servicetype,
+        avg(datediff(year,Birthdate,getdate())) over (partition by service_type ) as average_age_years,
+        avg(datediff(month,Birthdate,getdate())) over (partition by service_type ) as average_age_months,
+        Min(datediff(year,Birthdate,getdate())) over (partition by service_type ) as min_age_years,
+        Min(datediff(month,Birthdate,getdate())) over (partition by service_type ) as min_age_months,
+        Max(datediff(year,Birthdate,getdate())) over (partition by service_type ) as max_age_years,
+        Max(datediff(month,Birthdate,getdate())) over (partition by service_type ) as max_age_month,(
+        CASE WHEN DATEDIFF(DAY,getDate(),EmpAge.Last_day) >= 0
+            THEN DATEDIFF(year, Birthdate,getDate()) 
+            ELSE DATEDIFF(year, Birthdate,EmpAge.Last_Day) END) AS Service_Employee_Years,(
+        CASE WHEN DATEDIFF(DAY,getDate(),EmpAge.Last_day) >= 0
+            THEN DATEDIFF(month, Birthdate,getDate()) 
+            ELSE DATEDIFF(month, Birthdate,EmpAge.Last_Day) END) AS Service_Employee_Months,(
+        CASE WHEN DATEDIFF(DAY,getDate(),EmpAge.Last_day) >= 0
+            THEN 'WORKING' 
+            ELSE 'RETIRED' END ) As Service_Status
+from Employees2 e
+CROSS APPLY ( 
+SELECT EmployeeId,(
+CASE WHEN ServiceType = 1 and EmployeeType = 1
+     THEN dateadd(year,60,Birthdate)
+     WHEN ServiceType = 1 and EmployeeType = 2 or EmployeeType = 3
+     THEN dateadd(year,55,Birthdate)
+     ELSE dateadd(year,65,Birthdate)END) AS Last_day
+     FROM Employees2
+     WHERE Termination = 'OFF' and EmployeeId = e.EmployeeId
+     ) AS EmpAge
+     ORDER BY EmployeeId;
+  
+ 
+
+
+/*5. Write a query to list out all the employees where any of the words (Excluding Initials) in the Name 
+starts and ends with the same character. (Assume there are not more than 5 words in any name )
+*/
+Answer:
+OPTION 1:
+
+CREATE TABLE Employee5 (
+  EmployeeID INT PRIMARY KEY,
+  SURNAME VARCHAR(100),
+    FNAME VARCHAR(100),
+  LNAME VARCHAR(100),
+  ServiceType INT,
+);
+
+
+SELECT *
+FROM EMPLOYEE5
+WHERE
+	(LEFT(FNAME,1)=RIGHT(FNAME,1))OR (LEFT(LNAME,1)=RIGHT(LNAME,1))
+
+
+OPTION 2:
+
+SELECT DISTINCT employeeid, EmployeeName
+FROM (
+SELECT employeeid,EmployeeName,value
+from Employees2
+CROSS APPLY STRING_SPLIT(EmployeeName,' ')
+WHERE (left(value,1)=right(value,1) AND len(value)>1)) AS Emp;
