@@ -1,0 +1,64 @@
+
+/*1. Write a query to find the all the names which are similar in pronouncing as suresh, 
+sort the result in the order of similarity */
+Answer:
+select employeename
+from Employee4
+where employeename like '%esh'
+
+ 
+
+/*2. write a query to find second highest salary in organisation without using subqueries and top */
+Anwer:
+-- Option 1
+SELECT distinct Salary
+FROM Employees1
+ORDER BY 1 DESC
+OFFSET 1 ROWS
+FETCH NEXT 1 ROWS ONLY;
+ 
+-- Option 2
+SELECT e1.employee_id, e1.employee_name, e1.Salary
+FROM Employees1 e1, Employees1 e2
+WHERE e1.Salary < e2.Salary
+ORDER BY e1.Salary desc
+OFFSET 0 ROWS
+FETCH NEXT 1 ROWS ONLY;
+
+select * from employees1
+ 
+/* 3.write a query to find max salary and dep name from all the dept with out using top and limit */
+Answer:
+SELECT d.DepartmentId, e.Department, max(e.Salary) AS Maximum_Salary
+From Employees1 e,Departments d
+WHERE e.department_id = d.DepartmentID
+GROUP BY d.DepartmentID,e.Department
+ORDER BY d.DepartmentID;
+
+
+/*4)Write a SQL query to maximum number from a table without using MAX or MIN aggregate functions.
+Consider the numbers as mentioned below:
+7859
+6897
+9875
+8659
+7600
+7550 */
+Answer:
+create table table4(id int,num int)
+insert into table4 values (1,7859),(2,6897),(3,9875),(4,8659),(5,7600),(6,7550)
+
+SELECT *
+FROM table4
+ORDER BY num DESC
+OFFSET 0 ROWS
+FETCH first 1 ROWS ONLY;
+
+/*5.Write an SQL query to fetch all the Employees who are also managers from the EmployeeDetails table.
+*/
+Anwer:
+select distinct f.EmployeeID,f.FirstName,f.LastName
+from employees e, employees f
+where e.ManagerID=f.EmployeeID
+
+select * from employees
